@@ -1,17 +1,20 @@
-# Use official OpenJDK image
-FROM eclipse-temurin:17-jdk-alpine
+# Stage 1 - Build
+FROM eclipse-temurin:17-jdk-alpine as build
 
-# Set working directory inside container
 WORKDIR /app
 
-# Copy project files
 COPY . .
 
-# Build the application
+RUN chmod +x mvnw
 RUN ./mvnw clean package -DskipTests
 
-# Expose port
+# Stage 2 - Run
+FROM eclipse-temurin:17-jdk-alpine
+
+WORKDIR /app
+
+COPY --from=build /app/target/*.jar app.jar
+
 EXPOSE 8080
 
-# Run the application
-CMD ["java", "-jar", "target/*.jar"]
+ENTRYPOINT ["java","-jar","app.jar"]
